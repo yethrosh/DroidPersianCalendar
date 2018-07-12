@@ -76,6 +76,56 @@ public class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.ViewHolder> 
             itemView.setOnLongClickListener(this);
         }
 
+        void bind(int position) {
+            position = fixRtlPosition(position);
+            if (totalDays < position - 6 - firstDayDayOfWeek) {
+                setEmpty();
+
+            } else if (!isPositionHeader(position)) {
+                if (position - 7 - firstDayDayOfWeek >= 0) {
+                    num.setText(days.get(position - 7 - days.get(0).getDayOfWeek()).getNum());
+                    num.setVisibility(View.VISIBLE);
+
+                    DayEntity day = days.get(position - 7 - firstDayDayOfWeek);
+
+                    num.setTextSize(isArabicDigit ? 20 : 25);
+                    event.setVisibility(day.isEvent() ? View.VISIBLE : View.GONE);
+                    today.setVisibility(day.isToday() ? View.VISIBLE : View.GONE);
+
+                    if (position == selectedDay) {
+                        num.setBackgroundResource(shapeSelectDay.resourceId);
+                        num.setTextColor(ContextCompat.getColor(context, day.isHoliday()
+                                ? colorTextHoliday.resourceId
+                                : colorPrimary.resourceId));
+
+                    } else {
+                        num.setBackgroundResource(0);
+                        num.setTextColor(ContextCompat.getColor(context, day.isHoliday()
+                                ? colorHoliday.resourceId
+                                : R.color.dark_text_day));
+                    }
+
+                } else {
+                    setEmpty();
+                }
+
+            } else {
+                num.setText(Utils.getInitialOfWeekDay(position));
+                num.setTextColor(ContextCompat.getColor(context, colorDayName.resourceId));
+                num.setTextSize(20);
+                today.setVisibility(View.GONE);
+                num.setBackgroundResource(0);
+                event.setVisibility(View.GONE);
+                num.setVisibility(View.VISIBLE);
+            }
+        }
+
+        private void setEmpty() {
+            today.setVisibility(View.GONE);
+            num.setVisibility(View.GONE);
+            event.setVisibility(View.GONE);
+        }
+
         @Override
         public void onClick(View v) {
             int position = fixRtlPosition(getAdapterPosition());
@@ -119,60 +169,14 @@ public class MonthAdapter extends RecyclerView.Adapter<MonthAdapter.ViewHolder> 
 
     @Override
     public MonthAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(context).inflate(R.layout.item_day, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_day, parent, false);
 
         return new ViewHolder(v);
     }
 
     @Override
     public void onBindViewHolder(MonthAdapter.ViewHolder holder, int position) {
-        position = fixRtlPosition(position);
-        if (totalDays < position - 6 - firstDayDayOfWeek) {
-            setEmpty(holder);
-
-        } else if (!isPositionHeader(position)) {
-            if (position - 7 - firstDayDayOfWeek >= 0) {
-                holder.num.setText(days.get(position - 7 - days.get(0).getDayOfWeek()).getNum());
-                holder.num.setVisibility(View.VISIBLE);
-
-                DayEntity day = days.get(position - 7 - firstDayDayOfWeek);
-
-                holder.num.setTextSize(isArabicDigit ? 20 : 25);
-                holder.event.setVisibility(day.isEvent() ? View.VISIBLE : View.GONE);
-                holder.today.setVisibility(day.isToday() ? View.VISIBLE : View.GONE);
-
-                if (position == selectedDay) {
-                    holder.num.setBackgroundResource(shapeSelectDay.resourceId);
-                    holder.num.setTextColor(ContextCompat.getColor(context, day.isHoliday()
-                            ? colorTextHoliday.resourceId
-                            : colorPrimary.resourceId));
-
-                } else {
-                    holder.num.setBackgroundResource(0);
-                    holder.num.setTextColor(ContextCompat.getColor(context, day.isHoliday()
-                            ? colorHoliday.resourceId
-                            : R.color.dark_text_day));
-                }
-
-            } else {
-                setEmpty(holder);
-            }
-
-        } else {
-            holder.num.setText(Utils.getInitialOfWeekDay(position));
-            holder.num.setTextColor(ContextCompat.getColor(context, colorDayName.resourceId));
-            holder.num.setTextSize(20);
-            holder.today.setVisibility(View.GONE);
-            holder.num.setBackgroundResource(0);
-            holder.event.setVisibility(View.GONE);
-            holder.num.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void setEmpty(MonthAdapter.ViewHolder holder) {
-        holder.today.setVisibility(View.GONE);
-        holder.num.setVisibility(View.GONE);
-        holder.event.setVisibility(View.GONE);
+        holder.bind(position);
     }
 
     @Override
